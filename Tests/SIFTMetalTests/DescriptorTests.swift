@@ -48,7 +48,7 @@ final class DescriptorTests: SharedTestCase {
         let renderer = SIFTRenderer()
         attachImage(
             name: "descriptors",
-            uiImage: renderer.drawDescriptors(
+            cgImage: renderer.drawDescriptors(
                 sourceImage: referenceImage,
                 referenceDescriptors: referenceDescriptors,
                 foundDescriptors: foundDescriptors
@@ -130,7 +130,7 @@ final class DescriptorTests: SharedTestCase {
         let renderer = SIFTRenderer()
         attachImage(
             name: "matches",
-            uiImage: renderer.drawMatches(
+            cgImage: renderer.drawMatches(
                 sourceImage: referenceImage,
                 targetImage: referenceImage,
                 matches: matches
@@ -202,6 +202,7 @@ final class DescriptorTests: SharedTestCase {
                     subScale: 0,
                     scaledCoordinate: .zero,
                     absoluteCoordinate: SIMD2<Float>(x: x, y: y),
+                    normalizedCoordinate: SIMD2<Float>(x: x, y: y), // TODO colpute
                     sigma: s,
                     value: 0
                 ),

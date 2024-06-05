@@ -56,7 +56,7 @@ final class KeypointTests: SharedTestCase {
         let renderer = SIFTRenderer()
         attachImage(
             name: "keypoints",
-            uiImage: renderer.drawKeypoints(
+            cgImage: renderer.drawKeypoints(
                 sourceImage: referenceImage,
                 referenceKeypoints: referenceKeypoints,
                 foundKeypoints: keypoints
@@ -106,6 +106,7 @@ final class KeypointTests: SharedTestCase {
                 subScale: 0,
                 scaledCoordinate: .zero,
                 absoluteCoordinate: SIMD2<Float>(x: x, y: y),
+                normalizedCoordinate: SIMD2<Float>(x:x,y:y), // TODO: compute from scale
                 sigma: s,
                 value: 0
             )

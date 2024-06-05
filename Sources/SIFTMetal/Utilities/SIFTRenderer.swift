@@ -1,5 +1,5 @@
-import UIKit
 import CoreGraphics
+import Cocoa
 
 
 public final class SIFTRenderer {
@@ -10,35 +10,41 @@ public final class SIFTRenderer {
     
     public func drawKeypoints(
         sourceImage: CGImage,
-        overlayColor: UIColor = UIColor.black.withAlphaComponent(0.8),
-        referenceColor: UIColor = UIColor.red,
-        foundColor: UIColor = UIColor.green,
+        overlayColor: CGColor = CGColor.black.copy(alpha: 0.8)!,
+        referenceColor: CGColor = CGColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0),
+        foundColor: CGColor = CGColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0),
         referenceKeypoints: [SIFTKeypoint],
         foundKeypoints: [SIFTKeypoint]
-    ) -> UIImage {
+    ) -> CGImage? {
         
         let bounds = CGRect(x: 0, y: 0, width: sourceImage.width, height: sourceImage.height)
-
-        let renderer = UIGraphicsImageRenderer(size: bounds.size)
-        let uiImage = renderer.image { context in
-            let cgContext = context.cgContext
+        
+        if let cgContext = CGContext(
+                   data: nil,
+                   width: sourceImage.width,
+                   height: sourceImage.height,
+                   bitsPerComponent: sourceImage.bitsPerComponent,
+                   bytesPerRow: 0, // will cause the correct value to be computed
+                   space: sourceImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!,
+                   bitmapInfo: sourceImage.bitmapInfo.rawValue) {
+            
             
             cgContext.saveGState()
             cgContext.scaleBy(x: 1, y: -1)
             cgContext.translateBy(x: 0, y: -bounds.height)
             cgContext.draw(sourceImage, in: bounds)
             cgContext.restoreGState()
-                    
+            
             cgContext.saveGState()
             cgContext.setBlendMode(.multiply)
-            cgContext.setFillColor(overlayColor.cgColor)
+            cgContext.setFillColor(overlayColor)
             cgContext.fill([bounds])
             cgContext.restoreGState()
-
+            
             cgContext.saveGState()
             cgContext.setLineWidth(1)
-            cgContext.setStrokeColor(referenceColor.cgColor)
-    //        cgContext.setBlendMode(.screen)
+            cgContext.setStrokeColor(referenceColor)
+            //        cgContext.setBlendMode(.screen)
             for keypoint in referenceKeypoints {
                 let radius = CGFloat(keypoint.sigma)
                 let bounds = CGRect(
@@ -55,7 +61,7 @@ public final class SIFTRenderer {
             
             cgContext.saveGState()
             cgContext.setLineWidth(1)
-            cgContext.setStrokeColor(foundColor.cgColor)
+            cgContext.setStrokeColor(foundColor)
             cgContext.setBlendMode(.screen)
             for keypoint in foundKeypoints {
                 let radius = CGFloat(keypoint.sigma)
@@ -69,26 +75,35 @@ public final class SIFTRenderer {
             }
             cgContext.strokePath()
             cgContext.restoreGState()
+            
+            return cgContext.makeImage()
+        } else {
+            // failed to render
+            return sourceImage
         }
-        return uiImage
     }
 
 
     func drawDescriptors(
         sourceImage: CGImage,
-        overlayColor: UIColor = UIColor.black.withAlphaComponent(0.8),
-        referenceColor: UIColor = UIColor.green,
-        foundColor: UIColor = UIColor.red,
+        overlayColor: CGColor = CGColor.black.copy(alpha: 0.8)!,
+        referenceColor: CGColor = CGColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0),
+        foundColor: CGColor = CGColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0),
         referenceDescriptors: [SIFTDescriptor],
         foundDescriptors: [SIFTDescriptor]
-    ) -> UIImage {
+    ) -> CGImage? {
         
         let bounds = CGRect(x: 0, y: 0, width: sourceImage.width, height: sourceImage.height)
 
-        let renderer = UIGraphicsImageRenderer(size: bounds.size)
-        let uiImage = renderer.image { context in
-            let cgContext = context.cgContext
-            
+        if let cgContext = CGContext(
+                   data: nil,
+                   width: sourceImage.width,
+                   height: sourceImage.height,
+                   bitsPerComponent: sourceImage.bitsPerComponent,
+                   bytesPerRow: 0, // will cause the correct value to be computed
+                   space: sourceImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!,
+                   bitmapInfo: sourceImage.bitmapInfo.rawValue) {
+
             cgContext.saveGState()
             cgContext.scaleBy(x: 1, y: -1)
             cgContext.translateBy(x: 0, y: -bounds.height)
@@ -97,7 +112,7 @@ public final class SIFTRenderer {
                     
             cgContext.saveGState()
             cgContext.setBlendMode(.multiply)
-            cgContext.setFillColor(overlayColor.cgColor)
+            cgContext.setFillColor(overlayColor)
             cgContext.fill([bounds])
             cgContext.restoreGState()
 
@@ -105,19 +120,22 @@ public final class SIFTRenderer {
             
             drawDescriptors(cgContext: cgContext, color: foundColor, descriptors: foundDescriptors)
             
+            return cgContext.makeImage()
+            
+        } else {
+            return sourceImage
         }
-        return uiImage
     }
 
 
     public func drawMatches(
         sourceImage: CGImage,
         targetImage: CGImage,
-        overlayColor: UIColor = UIColor.black.withAlphaComponent(0.8),
-        sourceColor: UIColor = UIColor.cyan,
-        targetColor: UIColor = UIColor.yellow,
+        overlayColor: CGColor = CGColor.black.copy(alpha: 0.8)!,
+        sourceColor: CGColor = CGColor(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0),
+        targetColor: CGColor = CGColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0),
         matches: [SIFTCorrespondence]
-    ) -> UIImage {
+    ) -> CGImage? {
         
         precondition(targetImage.width == sourceImage.width)
         precondition(targetImage.height == sourceImage.height)
@@ -132,15 +150,20 @@ public final class SIFTRenderer {
         let sourceDescriptors = matches.map { $0.source }
         let targetDescriptors = matches.map { $0.target }
         
-        let colors: [UIColor] = [
-            .systemRed, .systemOrange, .systemYellow, .systemGreen, .systemTeal, .systemBlue, .systemPurple, .systemIndigo
-        ]
+        let colors: [CGColor] = [
+            NSColor.systemRed, NSColor.systemOrange, NSColor.systemYellow, NSColor.systemGreen, NSColor.systemTeal, NSColor.systemBlue, NSColor.systemPurple, NSColor.systemIndigo
+        ].map { $0.cgColor }
         let radius = CGFloat(2)
 
-        let renderer = UIGraphicsImageRenderer(size: bounds.size)
-        let uiImage = renderer.image { context in
-            let cgContext = context.cgContext
-            
+        if let cgContext = CGContext(
+                   data: nil,
+                   width: Int(bounds.width),
+                   height: Int(bounds.height),
+                   bitsPerComponent: sourceImage.bitsPerComponent,
+                   bytesPerRow: 0, // will cause the correct value to be computed
+                   space: sourceImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!,
+                   bitmapInfo: sourceImage.bitmapInfo.rawValue) {
+
             // Draw images
             cgContext.saveGState()
             cgContext.scaleBy(x: 1, y: -1)
@@ -152,7 +175,7 @@ public final class SIFTRenderer {
             // Overlay
             cgContext.saveGState()
             cgContext.setBlendMode(.multiply)
-            cgContext.setFillColor(overlayColor.cgColor)
+            cgContext.setFillColor(overlayColor)
             cgContext.fill([bounds])
             cgContext.restoreGState()
 
@@ -197,11 +220,11 @@ public final class SIFTRenderer {
 
                 if i % 10 == 0 {
                     cgContext.setLineWidth(2)
-                    cgContext.setStrokeColor(color.withAlphaComponent(0.5).cgColor)
+                    cgContext.setStrokeColor(color.copy(alpha: 0.5)! )
                 }
                 else {
                     cgContext.setLineWidth(0.5)
-                    cgContext.setStrokeColor(color.withAlphaComponent(0.3).cgColor)
+                    cgContext.setStrokeColor(color.copy(alpha: 0.3)!)
                 }
                 
                 cgContext.strokePath()
@@ -209,20 +232,22 @@ public final class SIFTRenderer {
             
             cgContext.restoreGState()
 
+            return cgContext.makeImage()
+        } else {
+            return nil
         }
-        return uiImage
     }
 
 
     private func drawDescriptors(
         cgContext: CGContext,
         at offset: CGPoint = .zero,
-        color: UIColor,
+        color: CGColor,
         descriptors: [SIFTDescriptor]
     ) {
         cgContext.saveGState()
         cgContext.setLineWidth(0.5)
-        cgContext.setStrokeColor(color.cgColor)
+        cgContext.setStrokeColor(color)
         cgContext.setBlendMode(.screen)
         for descriptor in descriptors {
             let keypoint = descriptor.keypoint

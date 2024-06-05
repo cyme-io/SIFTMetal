@@ -44,11 +44,12 @@ extension MTLDevice {
 
 
 extension CIContext {
-    
+   
+    #if canImport(UIKit)
     func makeUIImage(ciImage: CIImage) -> UIImage {
         return UIImage(cgImage: makeCGImage(ciImage: ciImage))
     }
-
+    #endif
     func makeCGImage(ciImage: CIImage) -> CGImage {
         return createCGImage(ciImage, from: ciImage.extent)!
     }
@@ -173,9 +174,11 @@ class SharedTestCase: XCTestCase {
         device = nil
     }
 
-    func attachImage(name: String, uiImage: UIImage) {
+    func attachImage(name: String, cgImage: CGImage?) {
+        guard  let cgImage =  cgImage else { return }
+        
         let attachment = XCTAttachment(
-            image: uiImage,
+            image: NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height)),
             quality: .original
         )
         attachment.name = name
