@@ -10,7 +10,7 @@ public final class SIFTRenderer {
     
     public func drawKeypoints(
         sourceImage: CGImage,
-        overlayColor: CGColor = CGColor.black.copy(alpha: 0.8)!,
+        overlayColor: CGColor = CGColor.black.copy(alpha: 0.3)!,
         referenceColor: CGColor = CGColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0),
         foundColor: CGColor = CGColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0),
         referenceKeypoints: [SIFTKeypoint],

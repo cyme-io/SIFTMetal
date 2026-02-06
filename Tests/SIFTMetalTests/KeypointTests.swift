@@ -59,7 +59,7 @@ final class KeypointTests: SharedTestCase {
             cgImage: renderer.drawKeypoints(
                 sourceImage: referenceImage,
                 referenceKeypoints: referenceKeypoints,
-                foundKeypoints: keypoints
+                foundKeypoints: Array(keypoints).filter{ keypoint in  keypoint.sigma < 3.0   }
             )
         )
 
